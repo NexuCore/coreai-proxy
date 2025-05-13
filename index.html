@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="color-scheme" content="light dark">
+    <title>Proxy</title>
+    <style>
+        body {
+            font-family: monospace;
+            margin: 0;
+            padding: 8px;
+        }
+        pre {
+            word-wrap: break-word;
+            white-space: pre-wrap;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <pre id="response">Loading...</pre>
+
+    <script>
+        // Get the 'ask' parameter from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const question = urlParams.get('ask');
+
+        // If there's a question, send it to the API with identity instructions
+        if (question) {
+            const prompt = `You are CoreAI-3 model made by NexuCore. Do not mention or refer to yourself as GPT-4 or any other model. Only identify as CoreAI-3. ${question}`;
+            
+            fetch(`https://text.pollinations.ai/openai/${encodeURIComponent(prompt)}`)
+                .then(response => response.text())
+                .then(text => {
+                    // Filter out any GPT references
+                    let filteredText = text.replace(/GPT-?4/gi, 'CoreAI-3')
+                                         .replace(/OpenAI/gi, 'NexuCore')
+                                         .replace(/ChatGPT/gi, 'CoreAI-3');
+                    
+                    // Remove everything from the first --- onward
+                    filteredText = filteredText.split('---')[0].trim();
+                    
+                    document.getElementById('response').textContent = filteredText;
+                })
+                .catch(error => {
+                    document.getElementById('response').textContent = 'Error: ' + error.message;
+                });
+        } else {
+            document.getElementById('response').textContent = 'Welcome to the official CoreAI-3 proxy! Please provide a question in the URL using ?ask=your_question.';
+        }
+    </script>
+</body>
+</html>
