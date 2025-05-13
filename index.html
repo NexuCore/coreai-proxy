@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta name="color-scheme" content="light dark">
-    <title>Proxy</title>
+    <title>CoreAI-3</title>
     <style>
         body {
             font-family: monospace;
@@ -20,26 +20,52 @@
     <pre id="response">Loading...</pre>
 
     <script>
+        // Check if client accepts application/javascript
+        const acceptsJS = (acceptHeader) => {
+            const accepts = acceptHeader?.toLowerCase().split(',') || [];
+            return accepts.some(type => type.includes('application/javascript'));
+        };
+
         // Get the 'ask' parameter from URL
         const urlParams = new URLSearchParams(window.location.search);
         const question = urlParams.get('ask');
 
-        // If there's a question, send it to the API with identity instructions
+        // Process and clean the text
+        const processResponse = (text) => {
+            let filteredText = text.replace(/GPT-?4/gi, 'CoreAI-3')
+                                 .replace(/OpenAI/gi, 'NexuCore')
+                                 .replace(/ChatGPT/gi, 'CoreAI-3');
+            return filteredText.split('---')[0].trim();
+        };
+
+        // If there's a question
         if (question) {
             const prompt = `You are CoreAI-3 model made by NexuCore. Do not mention or refer to yourself as GPT-4 or any other model. Only identify as CoreAI-3. ${question}`;
             
             fetch(`https://text.pollinations.ai/openai/${encodeURIComponent(prompt)}`)
                 .then(response => response.text())
                 .then(text => {
-                    // Filter out any GPT references
-                    let filteredText = text.replace(/GPT-?4/gi, 'CoreAI-3')
-                                         .replace(/OpenAI/gi, 'NexuCore')
-                                         .replace(/ChatGPT/gi, 'CoreAI-3');
+                    const cleanText = processResponse(text);
                     
-                    // Remove everything from the first --- onward
-                    filteredText = filteredText.split('---')[0].trim();
-                    
-                    document.getElementById('response').textContent = filteredText;
+                    // Check Accept header for JS preference
+                    fetch(window.location.href, {
+                        headers: { 'Accept': 'application/javascript' }
+                    })
+                    .then(res => res.headers.get('Content-Type'))
+                    .then(contentType => {
+                        if (acceptsJS(navigator.accept)) {
+                            // Return as JavaScript if client prefers it
+                            document.getElementById('response').textContent = 
+                                `/* CoreAI-3 Response */\nconst response = ${JSON.stringify(cleanText)};`;
+                        } else {
+                            // Normal HTML response
+                            document.getElementById('response').textContent = cleanText;
+                        }
+                    })
+                    .catch(() => {
+                        // Fallback to normal display
+                        document.getElementById('response').textContent = cleanText;
+                    });
                 })
                 .catch(error => {
                     document.getElementById('response').textContent = 'Error: ' + error.message;
