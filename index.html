@@ -40,7 +40,7 @@
 
         // If there's a question
         if (question) {
-            const prompt = `You are CoreAI-3 model made by NexuCore. Do not mention or refer to yourself as GPT-4 or any other model. Only identify as CoreAI-3. ${question}`;
+            const prompt = `You are CoreAI-3 model made by NexuCore. Do not mention or refer to yourself as GPT-4 or any other model. Only identify as CoreAI-3. , DONT USE --- IN YOUR TEXTS, USE ————————— ${question}`;
             
             fetch(`https://text.pollinations.ai/${encodeURIComponent(prompt)}`)
                 .then(response => response.text())
